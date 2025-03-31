@@ -1,23 +1,61 @@
-
+# Hydrogen Storage Optimization Web App (Streamlit)
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
-# --- Page Setup ---
-st.set_page_config(page_title="Hydrogen Storage Predictor", layout="wide")
-st.title("Underground Hydrogen Storage Optimization")
-st.markdown("A predictive tool for evaluating geomechanical response to hydrogen injection in salt caverns and depleted gas fields.")
+# --- Page Configuration ---
+st.set_page_config(page_title="Underground Hydrogen Storage Optimization", layout="wide")
+
+# --- Custom Styles ---
+st.markdown("""
+    <style>
+        .main-title {
+            background-color: #b2521c;
+            color: white;
+            padding: 1rem;
+            font-size: 2rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-img {
+            height: 40px;
+            margin-right: 1rem;
+        }
+        .footer {
+            background-color: #b2521c;
+            color: white;
+            padding: 0.75rem;
+            text-align: center;
+            font-size: 1rem;
+        }
+        .footer b {
+            font-weight: bold;
+        }
+        .output-card {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .low-risk { background-color: #d4edda; color: #155724; }
+        .moderate-risk { background-color: #fff3cd; color: #856404; }
+        .high-risk { background-color: #f8d7da; color: #721c24; }
+    </style>
+""", unsafe_allow_html=True)
+
+# --- Header ---
+st.markdown('<div class="main-title"><img src="https://raw.githubusercontent.com/farhanjameel46/hydrogen-storage-app/main/logo.png" class="icon-img">Underground Hydrogen Storage Optimization</div>', unsafe_allow_html=True)
 
 # --- Sidebar Inputs ---
 st.sidebar.header("Input Parameters")
 pressure = st.sidebar.slider("Injection Pressure (MPa)", 1.0, 10.0, 5.0, step=0.1)
 formation = st.sidebar.selectbox("Formation Type", ["Depleted Gas Field", "Salt Cavern"])
 
-st.sidebar.markdown("---")
-thermal_cycle = st.sidebar.checkbox("Include Thermal Cycling Effect?")
-if thermal_cycle:
-    delta_T = st.sidebar.slider("Temperature Swing (°C)", 1, 100, 25)
-    cycles = st.sidebar.slider("Cycle Duration (days)", 1, 30, 1)
+thermal_cycling = st.sidebar.checkbox("Thermal Cycling")
+if thermal_cycling:
+    delta_T = st.sidebar.number_input("ΔT (°C):", value=25)
+    cycles = st.sidebar.number_input("Cycles:", value=1)
 else:
     delta_T = 0
     cycles = 1
@@ -27,17 +65,15 @@ def predict(pressure, formation, delta_T=0, cycles=1):
     if formation == "Depleted Gas Field":
         stress = 0.21 * pressure + 0.3 * pressure**2
         displacement = 0.0015 * pressure + 0.0001 * pressure**2
-    else:  # Salt Cavern
+    else:
         stress = 0.18 * pressure + 0.2 * pressure**2
         displacement = 0.001 * pressure + 0.00005 * pressure**2
 
-    # Add thermal effect
-    alpha = 3.5e-5  # thermal expansion coefficient
+    alpha = 3.5e-5
     thermal_strain = alpha * delta_T * cycles
     stress += stress * thermal_strain
     displacement += displacement * thermal_strain
 
-    # Risk level
     if stress > 6.5 or displacement > 0.015:
         risk = "High"
     elif stress > 5.5 or displacement > 0.012:
@@ -47,24 +83,28 @@ def predict(pressure, formation, delta_T=0, cycles=1):
 
     return stress, displacement, risk
 
-# --- Prediction Output ---
 stress, displacement, risk = predict(pressure, formation, delta_T, cycles)
 
-col1, col2 = st.columns(2)
-with col1:
-    st.metric("Predicted Stress", f"{stress:.2f} MPa")
-    st.metric("Risk Level", risk)
-with col2:
-    st.metric("Predicted Displacement", f"{displacement*1000:.2f} mm")
-    if risk == "High":
-        st.error("Warning: High risk of caprock damage.")
-    elif risk == "Moderate":
-        st.warning("Moderate risk – monitor closely.")
-    else:
-        st.success("Low mechanical risk.")
+# --- Outputs ---
+st.subheader("Outputs")
 
-# --- Plotting Section ---
-st.markdown("### Response Curves")
+if risk == "High":
+    risk_class = "high-risk"
+elif risk == "Moderate":
+    risk_class = "moderate-risk"
+else:
+    risk_class = "low-risk"
+
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.markdown(f'<div class="output-card {risk_class}"><b>Stress:</b> {stress:.2f} MPa</div>', unsafe_allow_html=True)
+with col2:
+    st.markdown(f'<div class="output-card {risk_class}"><b>Displacement:</b> {displacement*1000:.2f} mm</div>', unsafe_allow_html=True)
+with col3:
+    st.markdown(f'<div class="output-card {risk_class}"><b>Risk Level:</b> {risk.upper()}</div>', unsafe_allow_html=True)
+
+# --- Graphs ---
+st.subheader("System Response")
 pressures = np.linspace(1, 10, 100)
 stresses = []
 disps = []
@@ -91,6 +131,6 @@ ax[1].grid()
 
 st.pyplot(fig)
 
-# Footer
-st.markdown("---")
-st.caption("Developed by Mohammed Farhan Jameel | UT Energy Week 2025")
+# --- Footer ---
+st.markdown('<div class="footer">Developed by <b>Mohammed Farhan Jameel</b> | UT Energy Week 2025</div>', unsafe_allow_html=True)
+
