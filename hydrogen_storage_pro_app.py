@@ -19,8 +19,10 @@ st.markdown("""
             align-items: center;
             justify-content: center;
         }
-        .icon-img {
-            height: 40px;
+        .h2-icon {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
             margin-right: 1rem;
         }
         .footer {
@@ -45,7 +47,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- Header ---
-st.markdown('<div class="main-title"><img src="https://raw.githubusercontent.com/farhanjameel46/hydrogen-storage-app/main/logo.png" class="icon-img">Underground Hydrogen Storage Optimization</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title"><span class="h2-icon">H<sub>2</sub></span>Underground Hydrogen Storage Optimization</div>', unsafe_allow_html=True)
 
 # --- Sidebar Inputs ---
 st.sidebar.header("Input Parameters")
@@ -133,4 +135,5 @@ st.pyplot(fig)
 
 # --- Footer ---
 st.markdown('<div class="footer">Developed by <b>Mohammed Farhan Jameel</b> | UT Energy Week 2025</div>', unsafe_allow_html=True)
+
 
